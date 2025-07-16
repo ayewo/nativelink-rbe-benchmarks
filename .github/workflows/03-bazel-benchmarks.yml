@@ -42,7 +42,7 @@ jobs:
         with:
           repository: ${{ env.BENCHMARK_PROJECT_REPO }}
           path: ${{ env.BENCHMARK_PROJECT_DIR }}
-          ref: ${{ env.BENCHMARK_PROJECT_VERSION }}
+          # ref: ${{ env.BENCHMARK_PROJECT_VERSION }}
 
       - name: Save commit metadata from the target repo as environment variables
         run: |
