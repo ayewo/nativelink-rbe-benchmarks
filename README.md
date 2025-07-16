@@ -97,6 +97,24 @@ Using the GitHub CLI tool [`gh`](https://cli.github.com/) to setup and trigger a
      -f "source[branch]=main" \
      -f "source[path]=/"
   ```
+  ```sh
+    {
+    "url": "https://api.github.com/repos/ayewo/nativelink-rbe-benchmarks/pages",
+    "status": null,
+    "cname": null,
+    "custom_404": false,
+    "html_url": "https://ayewo.github.io/nativelink-rbe-benchmarks/",
+    "build_type": "workflow",
+    "source": {
+      "branch": "main",
+      "path": "/"
+    },
+    "public": true,
+    "protected_domain_state": null,
+    "pending_domain_unverified_at": null,
+    "https_enforced": true
+  }
+  ```
  
 6. Now set `ubuntu-22.04-rbe-worker` as the RBE [custom image](https://www.nativelink.com/docs/nativelink-cloud/rbe#custom-images) name to be used for the remote execution part of the benchmarks:
   ```sh
