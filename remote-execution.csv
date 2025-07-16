@@ -1,0 +1,100 @@
+startTime,startTimeMillis,commit,commitMessage,buildTimeSeconds,criticalPathTimeSeconds,totalRunnerCount,internalRunnerCount,remoteRunnerCount,cacheHitCount,bytesSent,bytesRecv,annotation
+2025-07-10T14:55:40.030Z,1752159340030,6146a88f60492b520a36f8f8f3231e15f3cc6082,"[LoongArch] Fix '-mno-lsx' option not disabling LASX feature (#143821)
+
+When '-march' with LASX feature and '-mno-lsx' options are used
+together, '-mno-lsx' fails to disable LASX, leaving
+'HasFeatureLASX=true' and causing incorrect '__loongarch_sx/asx=1' macro
+definition.
+
+Fixes https://github.com/loongson-community/discussions/issues/95
+
+(cherry picked from commit 2ecbfc0beb42abbbd2c3d28bfd576b38c44a5b46)
+",78.147,16.28,5756,1372,,4384,69561181,19731925,
+2025-07-10T23:42:01.606Z,1752190921606,6146a88f60492b520a36f8f8f3231e15f3cc6082,"[LoongArch] Fix '-mno-lsx' option not disabling LASX feature (#143821)
+
+When '-march' with LASX feature and '-mno-lsx' options are used
+together, '-mno-lsx' fails to disable LASX, leaving
+'HasFeatureLASX=true' and causing incorrect '__loongarch_sx/asx=1' macro
+definition.
+
+Fixes https://github.com/loongson-community/discussions/issues/95
+
+(cherry picked from commit 2ecbfc0beb42abbbd2c3d28bfd576b38c44a5b46)
+",80.293,16.21,5756,1372,,4384,74290435,19654828,
+2025-07-11T23:42:11.334Z,1752277331334,6146a88f60492b520a36f8f8f3231e15f3cc6082,"[LoongArch] Fix '-mno-lsx' option not disabling LASX feature (#143821)
+
+When '-march' with LASX feature and '-mno-lsx' options are used
+together, '-mno-lsx' fails to disable LASX, leaving
+'HasFeatureLASX=true' and causing incorrect '__loongarch_sx/asx=1' macro
+definition.
+
+Fixes https://github.com/loongson-community/discussions/issues/95
+
+(cherry picked from commit 2ecbfc0beb42abbbd2c3d28bfd576b38c44a5b46)
+",74.022,15.61,5756,1372,,4384,66709736,19703708,
+2025-07-12T23:43:29.807Z,1752363809807,6146a88f60492b520a36f8f8f3231e15f3cc6082,"[LoongArch] Fix '-mno-lsx' option not disabling LASX feature (#143821)
+
+When '-march' with LASX feature and '-mno-lsx' options are used
+together, '-mno-lsx' fails to disable LASX, leaving
+'HasFeatureLASX=true' and causing incorrect '__loongarch_sx/asx=1' macro
+definition.
+
+Fixes https://github.com/loongson-community/discussions/issues/95
+
+(cherry picked from commit 2ecbfc0beb42abbbd2c3d28bfd576b38c44a5b46)
+",75.826,15.79,5756,1372,,4384,71824668,19710180,
+2025-07-13T22:55:02.880Z,1752447302880,6146a88f60492b520a36f8f8f3231e15f3cc6082,"[LoongArch] Fix '-mno-lsx' option not disabling LASX feature (#143821)
+
+When '-march' with LASX feature and '-mno-lsx' options are used
+together, '-mno-lsx' fails to disable LASX, leaving
+'HasFeatureLASX=true' and causing incorrect '__loongarch_sx/asx=1' macro
+definition.
+
+Fixes https://github.com/loongson-community/discussions/issues/95
+
+(cherry picked from commit 2ecbfc0beb42abbbd2c3d28bfd576b38c44a5b46)
+",75.182,15.82,5756,1372,,4384,70534389,20072950,
+2025-07-13T23:08:23.566Z,1752448103566,6146a88f60492b520a36f8f8f3231e15f3cc6082,"[LoongArch] Fix '-mno-lsx' option not disabling LASX feature (#143821)
+
+When '-march' with LASX feature and '-mno-lsx' options are used
+together, '-mno-lsx' fails to disable LASX, leaving
+'HasFeatureLASX=true' and causing incorrect '__loongarch_sx/asx=1' macro
+definition.
+
+Fixes https://github.com/loongson-community/discussions/issues/95
+
+(cherry picked from commit 2ecbfc0beb42abbbd2c3d28bfd576b38c44a5b46)
+",79.77,17.81,5756,1372,,4384,72615751,20044825,
+2025-07-13T23:41:54.318Z,1752450114318,6146a88f60492b520a36f8f8f3231e15f3cc6082,"[LoongArch] Fix '-mno-lsx' option not disabling LASX feature (#143821)
+
+When '-march' with LASX feature and '-mno-lsx' options are used
+together, '-mno-lsx' fails to disable LASX, leaving
+'HasFeatureLASX=true' and causing incorrect '__loongarch_sx/asx=1' macro
+definition.
+
+Fixes https://github.com/loongson-community/discussions/issues/95
+
+(cherry picked from commit 2ecbfc0beb42abbbd2c3d28bfd576b38c44a5b46)
+",82.548,17.7,5756,1372,,4384,72857117,19988362,
+2025-07-15T03:18:39.105Z,1752549519105,d1db176e82fa02188471ca014582016b0b1ace7b,"ARM: Stop setting sincos_stret calling convention (#147457)
+
+This was going out of its way to explicitly mark these as
+ARM_AAPCS_VFP. This has been explicitly set since 8b40366b54bd4,
+where the commit message states that sincos (not sincos_stret)
+has a special calling convention. However, that commit also sets
+the calling convention for all libcalls to ARM_AAPCS_VFP, and
+getEffectiveCallingConv returns the same for CCC anyway in tests
+using isWatchABI triples.
+
+The net result of this appears to be a change in behavior when
+using -float-abi=soft with isWatchABI, which have no tests so
+I assume this is a theoretical combination.
+
+If I assert
+
+Only 2 tests fail the second condition, which look like copy paste
+accidents
+using v7k triples with linux and only needed a filler triple. This is a
+consequence
+of strangely using the target architecture in place of the OS ABI check,
+as was done in 042a6c1fe19caf48af7e287dc8f6fd5fec158093",530.309,269.21,5894,1385,4400,109,375460485,52459876,

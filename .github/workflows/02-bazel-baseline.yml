@@ -1,0 +1,29 @@
+name: Truncate Benchmark Output
+
+on:
+  workflow_dispatch:
+
+jobs:
+  checkout-and-commit:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: >- # v4.2.2
+          actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Reset the benchmark output to baseline
+        run: |
+          cat <<EOF > remote-caching.csv
+          startTime,startTimeMillis,commit,commitMessage,buildTimeSeconds,criticalPathTimeSeconds,\
+          totalRunnerCount,internalRunnerCount,remoteRunnerCount,cacheHitCount,bytesSent,bytesRecv,annotation
+          EOF
+          cp remote-caching.csv remote-execution.csv
+
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add remote-caching.csv remote-execution.csv
+          git commit -m "Truncate output files used by the benchmarks"
+          git push origin main

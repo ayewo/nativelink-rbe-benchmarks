@@ -1,0 +1,152 @@
+---
+// No server-side props needed for this component
+---
+
+<div class="chart-container">
+  <canvas id="timeSeriesChart"></canvas>
+</div>
+
+<script>
+  import Chart from 'chart.js/auto';
+  import 'chartjs-adapter-date-fns';
+  import Papa from 'papaparse';
+
+  async function loadCSVData(path) {
+    try {
+      const response = await fetch(path);
+      const csvText = await response.text();
+      
+      return new Promise((resolve) => {
+        Papa.parse(csvText, {
+          header: true,
+          dynamicTyping: true,
+          complete: (results) => {
+            resolve(results.data);
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Error loading CSV:', error);
+      return [];
+    }
+  }
+
+  async function createChart() {
+    const data1 = await loadCSVData('/nativelink-rbe-benchmarks/data/remote-caching.csv');
+    const data2 = await loadCSVData('/nativelink-rbe-benchmarks/data/remote-execution.csv');
+    
+    if (!data1.length || !data2.length) {
+      console.error('No data loaded');
+      return;
+    }
+
+    const ctx = document.getElementById('timeSeriesChart') as HTMLCanvasElement;
+    
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: 'Remote Caching',
+            data: data1.map(row => ({
+              x: new Date(row.startTimeMillis),
+              y: row.buildTimeSeconds,
+              commitMessage: row.commitMessage,
+              criticalPathTimeSeconds: row.criticalPathTimeSeconds,
+              cacheHitCount: row.cacheHitCount
+            })),
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.1
+          },
+          {
+            label: 'Remote Execution',
+            data: data2.map(row => ({
+              x: new Date(row.startTimeMillis),
+              y: row.buildTimeSeconds,
+              commitMessage: row.commitMessage,
+              criticalPathTimeSeconds: row.criticalPathTimeSeconds,
+              cacheHitCount: row.cacheHitCount
+            })),
+            borderColor: 'rgb(239, 68, 68)',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            tension: 0.1
+          },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'RBE Metrics Over Time'
+          },
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            mode: 'nearest',
+            intersect: true,
+            callbacks: {
+              label: function(context) {
+                const lines = [
+                  context.dataset.label,
+                  'Build Time: ' + context.parsed.y + ' secs'
+                ];
+                if (context.raw && context.raw.criticalPathTimeSeconds !== undefined) {
+                  lines.push('Critical Path: ' + context.raw.criticalPathTimeSeconds + ' secs');
+                }
+                if (context.raw && context.raw.cacheHitCount !== undefined) {
+                  lines.push('Cache Hits: ' + context.raw.cacheHitCount);
+                }
+                if (context.raw && context.raw.commitMessage) {
+                  lines.push('Commit: ' + context.raw.commitMessage.substring(0, 80) + '...');
+                }
+                return lines;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              unit: 'day'
+            },
+            title: {
+              display: true,
+              text: 'Date'
+            }
+          },
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            title: {
+              display: true,
+              text: 'Build Time (Seconds)'
+            }
+          },
+        },
+        interaction: {
+          mode: 'nearest',
+          intersect: true,
+        }
+      }
+    });
+  }
+
+  // Initialize chart when DOM is loaded
+  document.addEventListener('DOMContentLoaded', createChart);
+</script>
+
+<style>
+  .chart-container {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    margin: 2rem 0;
+  }
+</style>

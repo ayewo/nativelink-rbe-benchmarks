@@ -1,0 +1,57 @@
+name: Apache Otava CSV Analysis
+
+on:
+  workflow_run:
+    workflows: ["Performance Benchmarks"]
+    types:
+      - completed    
+  workflow_dispatch:
+  
+
+jobs:
+  analyze-csv:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout repository
+      uses: >- # v4.2.2
+        actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+    - name: Set up Python
+      uses: >- # v5.6.0
+        actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+      with:
+        python-version: '3.10'
+        
+    - name: Install uv and Apache Otava
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        export PATH="$HOME/.cargo/bin:$PATH"
+        uv pip install --system apache-otava
+                
+    - name: Create Apache Otava configuration
+      run: |
+        mkdir -p ~/.otava
+        cp otava.yaml ~/.otava/otava.yaml
+        # Or prefix commands with "OTAVA_CONFIG=otava.yaml otava ..."
+        
+    - name: Run Apache Otava analysis
+      run: |
+        echo "=== Apache Otava Analysis ==="
+        echo "Listing available tests:"
+        otava list-tests
+        echo ""
+        
+        echo "Listing available metrics for remote-caching test:"
+        otava list-metrics remote-caching.test
+        echo ""
+        
+        echo "Running change-point analysis:"
+        otava analyze nativelink-RBE-CPD 2>&1 | tee analysis.txt
+
+    - name: Upload analysis report
+      uses: >- # v4.6.2
+        actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: apache-otava-analysis
+        path: analysis.txt

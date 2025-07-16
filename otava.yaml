@@ -1,0 +1,43 @@
+tests:
+  remote-caching.test:
+    type: csv
+    file: remote-caching.csv
+    time_column: startTime
+    metrics:
+      buildTimeSeconds:
+        direction: -1  # lower is better
+      criticalPathTimeSeconds:
+        direction: -1  # lower is better
+      cacheHitCount:
+        direction: 1   # higher is better
+#       bytesSent:
+#         direction: 1  # higher is better (cache accesses are directly correlated with higher network usage)
+#       bytesRecv:
+#         direction: 1  # higher is better (cache accesses are directly correlated with higher network usage)
+    attributes: [commit, totalRunnerCount, internalRunnerCount, remoteRunnerCount]
+    csv_options:
+      delimiter: ","
+      quote_char: '"'
+
+  remote-execution.test:
+    type: csv
+    file: remote-execution.csv
+    time_column: startTime
+    metrics:
+      buildTimeSeconds:
+        direction: -1  # lower is better
+      criticalPathTimeSeconds:
+        direction: -1  # lower is better
+      cacheHitCount:
+        direction: 1   # higher is better
+    attributes: [commit, totalRunnerCount, internalRunnerCount, remoteRunnerCount]
+    csv_options:
+      delimiter: ","
+      quote_char: '"'
+
+
+
+test_groups:
+  nativelink-RBE-CPD:
+    - remote-caching.test
+    - remote-execution.test
