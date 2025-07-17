@@ -16,11 +16,15 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  # --- Benchmark configuration for the source repo ---
+  SOURCE_REPO_URL: "https://github.com/TraceMachina/nativelink"
+  SOURCE_REPO: "TraceMachina/nativelink"
+  SOURCE_DIR: "source-repo"  
   # --- Benchmark configuration for the target repo ---
-  BENCHMARK_PROJECT_REPO_URL: "https://github.com/llvm/llvm-project.git"
-  BENCHMARK_PROJECT_REPO: "llvm/llvm-project"
-  BENCHMARK_PROJECT_VERSION: "llvmorg-20.1.7" # commit 6146a88f60492b520a36f8f8f3231e15f3cc6082
-  BENCHMARK_PROJECT_DIR: "target-repo"  
+  TARGET_REPO_URL: "https://github.com/llvm/llvm-project"
+  TARGET_REPO: "llvm/llvm-project"
+  TARGET_VERSION: "llvmorg-20.1.7" # fixed commit 6146a88f60492b520a36f8f8f3231e15f3cc6082
+  TARGET_DIR: "target-repo"  
 
   # --- Bazel configuration ---
   BAZEL_VERSION: "8.2.1"
@@ -36,23 +40,30 @@ jobs:
         uses: >- # v4.2.2
           actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
+      - name: Clone and checkout source repo
+        uses: >- # v4.2.2
+          actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ env.SOURCE_REPO }}
+          path: ${{ env.SOURCE_DIR }}
+
       - name: Clone and checkout target repo
         uses: >- # v4.2.2
           actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          repository: ${{ env.BENCHMARK_PROJECT_REPO }}
-          path: ${{ env.BENCHMARK_PROJECT_DIR }}
-          ref: ${{ env.BENCHMARK_PROJECT_VERSION }}
+          repository: ${{ env.TARGET_REPO }}
+          path: ${{ env.TARGET_DIR }}
+          ref: ${{ env.TARGET_VERSION }}
 
-      - name: Save commit metadata from the target repo as environment variables
+      - name: Save commit metadata from the source repo as environment variables
         run: |
-          cd ${{ env.BENCHMARK_PROJECT_DIR }}
+          cd ${{ env.SOURCE_DIR }}
           COMMIT_HASH=$(git rev-parse HEAD)
-          echo "Checked out commit $COMMIT_HASH from ${{ env.BENCHMARK_PROJECT_REPO_URL }}"
+          echo "Checked out commit $COMMIT_HASH from ${{ env.SOURCE_REPO_URL }}"
           echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_ENV
           { echo 'COMMIT_MESSAGE<<EOF'; git log -1 --pretty=%B; echo EOF; } >> "$GITHUB_ENV" 
           
-      - name: Check if this commit in the target repo has been benchmarked before
+      - name: Check if this commit in the source repo has been benchmarked before
         id: check_commit
         run: |
           # Check if CSV file exists (try both possible names)
@@ -71,16 +82,16 @@ jobs:
           # Get the last row's commitHash (skip header, get last line, extract 3rd field)
           LAST_COMMIT_HASH=$(tail -n +2 "$CSV_FILE" | tail -n 1 | cut -d',' -f3)
           
-          echo "Target repo commit hash from last run: $LAST_COMMIT_HASH"
-          echo "Target repo commit hash from current run: $COMMIT_HASH"
+          echo "Source repo commit hash from last run: $LAST_COMMIT_HASH"
+          echo "Source repo commit hash from current run: $COMMIT_HASH"
           
           # Compare commit hashes
           if [ "$COMMIT_HASH" = "$LAST_COMMIT_HASH" ]; then
-            echo "Commit hashes match - ending job as there are no new commits in the target repo"
+            echo "Commit hashes match - ending job as there are no new commits in the **source** repo"
             echo "skip_next=true" >> $GITHUB_OUTPUT
             exit 0
           else
-            echo "Commit hashes differ - continue job run building the target repo"
+            echo "Commit hashes differ - continue job run building the **target** repo"
             echo "skip_next=false" >> $GITHUB_OUTPUT
           fi
           
@@ -110,7 +121,7 @@ jobs:
           chmod -R 755 $GITHUB_WORKSPACE
 
       - name: Add Nativelink config to the target repo's .bazelrc
-        working-directory: ${{ env.BENCHMARK_PROJECT_DIR }}
+        working-directory: ${{ env.TARGET_DIR }}
         run: |
           cat > utils/bazel/user.bazelrc << 'EOF'
           # debugging config
@@ -137,7 +148,7 @@ jobs:
 
       # --- Scenario 01: Build target repo with Remote Cache Only ---
       - name: Target repo build using Bazel Remote Caching - run
-        working-directory: ${{ env.BENCHMARK_PROJECT_DIR }}/utils/bazel
+        working-directory: ${{ env.TARGET_DIR }}/utils/bazel
         run: |
           bazel clean --expunge
           bazel build --build_event_json_file=$GITHUB_WORKSPACE/01-bep-remote-cache.json \
@@ -151,7 +162,7 @@ jobs:
 
       # --- Scenario 02: Build with Remote Caching & Execution ---
       - name: Target repo build using Bazel Remote Execution - run
-        working-directory: ${{ env.BENCHMARK_PROJECT_DIR }}/utils/bazel
+        working-directory: ${{ env.TARGET_DIR }}/utils/bazel
         run: |
           bazel clean --expunge
           bazel build --build_event_json_file=$GITHUB_WORKSPACE/02-bep-remote-cache-and-execution.json \
@@ -167,9 +178,9 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add remote-caching.csv remote-execution.csv
-          git commit -m "Update benchmark results of the target-repo
+          git commit -m "Update benchmark CSV files
           
-          Commit: ${{ env.BENCHMARK_PROJECT_REPO }}@${{ env.COMMIT_HASH }}"
+          Commit: ${{ env.SOURCE_REPO }}@${{ env.COMMIT_HASH }}"
           git push origin main
 
       - name: Check if BEP JSON files from the Bazel build exist
