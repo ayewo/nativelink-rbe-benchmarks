@@ -1,4 +1,26 @@
 startTime,startTimeMillis,commit,commitMessage,buildTimeSeconds,criticalPathTimeSeconds,totalRunnerCount,internalRunnerCount,remoteRunnerCount,cacheHitCount,bytesSent,bytesRecv,annotation
+2025-07-14T23:38:26.144Z,1752536306144,d1db176e82fa02188471ca014582016b0b1ace7b,"ARM: Stop setting sincos_stret calling convention (#147457)
+
+This was going out of its way to explicitly mark these as
+ARM_AAPCS_VFP. This has been explicitly set since 8b40366b54bd4,
+where the commit message states that sincos (not sincos_stret)
+has a special calling convention. However, that commit also sets
+the calling convention for all libcalls to ARM_AAPCS_VFP, and
+getEffectiveCallingConv returns the same for CCC anyway in tests
+using isWatchABI triples.
+
+The net result of this appears to be a change in behavior when
+using -float-abi=soft with isWatchABI, which have no tests so
+I assume this is a theoretical combination.
+
+If I assert
+
+Only 2 tests fail the second condition, which look like copy paste
+accidents
+using v7k triples with linux and only needed a filler triple. This is a
+consequence
+of strangely using the target architecture in place of the OS ABI check,
+as was done in 042a6c1fe19caf48af7e287dc8f6fd5fec158093",13007.477,1904.3,5894,1385,,111,3871266356,174956997,
 2025-07-16T23:41:57.956Z,1752709317956,26b0b279deca7cd660efcae5c17bd27a15ead36d,[AMDGPU] Select flat GVS stores on gfx1250 (#149203)\n\n,6268.676,891.32,5890,1384,,123,3845570532,166395730,
 2025-07-17T23:45:12.268Z,1752795912268,cd1e51535f74d67a1e7ade08c38f2a00a421174a,Tested redaction for stream.first_msg in bytestream (#1865)\n\n,55.886,8.85,5756,1372,,4384,66983204,105924516,
 2025-07-18T23:44:32.556Z,1752882272556,cd1e51535f74d67a1e7ade08c38f2a00a421174a,Tested redaction for stream.first_msg in bytestream (#1865)\n\n,43.351,7.65,5756,1372,,4384,62119825,105841189,
