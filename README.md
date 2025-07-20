@@ -1,9 +1,9 @@
 # Nativelink Benchmarks
-This benchmark uses [Change Point Detection](https://en.wikipedia.org/wiki/Change_detection) (CPD) to catch regressions in performance. The CPD calculations are done using the (incubating) [Apache Otava](https://github.com/apache/otava) project currently at v0.6.0. Otava is written in Python.
+This benchmark uses [Change Point Detection](https://en.wikipedia.org/wiki/Change_detection) (CPD) to catch regressions in performance. The CPD calculations[^1] are done using the (incubating) [Apache Otava](https://github.com/apache/otava) project currently at v0.6.0. Otava is written in Python.
 
 
 ## Apache Otava
-The tool supports posting regressions it finds to Slack, if a valid [`SLACK_BOT_TOKEN`](https://github.com/apache/otava/blob/9bce358eb9e27d5b11e23b0667c452f3bf189dc8/otava/resources/otava.yaml#L27-L28) is added to the `otava.yaml` config file.
+The tool supports posting results it finds to Slack, if a valid [`SLACK_BOT_TOKEN`](https://github.com/apache/otava/blob/9bce358eb9e27d5b11e23b0667c452f3bf189dc8/otava/resources/otava.yaml#L27-L28) is added to the `otava.yaml` config file.
 
 ## Target Repo
 The OSS project adopted for the Nativelink benchmarks is the [LLVM project](https://github.com/llvm/llvm-project). LLVM is massive C/C++ monorepo that is well-known among developers as platform for building compiler toolchains. 
@@ -13,7 +13,7 @@ Picking a recognizable monorepo like LLVM should hopefully illustrate the immens
 ### Competing Build Systems
 A major reason for selecting the LLVM project is due to its support of two different build systems for building the monorepo:
 * CMake — the main build system which is officially supported by the project maintainers and;
-* Bazel[^1] — an [experimental](https://github.com/llvm/llvm-project/tree/main/utils/bazel) but fully functional alternative build system supported by the community.
+* Bazel[^2] — an [experimental](https://github.com/llvm/llvm-project/tree/main/utils/bazel) but fully functional alternative build system supported by the community.
 
 ---
 
@@ -170,5 +170,6 @@ To view it, please visit: https://ayewo.github.io/nativelink-rbe-benchmarks/
 
 
 ## Footnotes
-[^1]: The [LLVM project](https://github.com/llvm/llvm-project) is primarily built using CMake, but in 2021, a [proposal](https://github.com/llvm/llvm-www/blob/main/proposals/LP0002-BazelBuildConfiguration.md) seeking to add an alternative way of building the LLVM monorepo was accepted. For years, Google had been maintaining [`llvm-bazel`](https://github.com/google/llvm-bazel) to allow them build the LLVM monorepo internally using Bazel (instead of the official build system based on CMake), so once the proposal was accepted, code from the `llvm-bazel` repo was merged into `llvm-project`.
+[^1]: The statistical [analysis](https://github.com/apache/otava/blob/9bce358eb9e27d5b11e23b0667c452f3bf189dc8/otava/analysis.py) uses [Student's T-test](https://en.wikipedia.org/wiki/Student%27s_t-test). Inspiration to use Apache Otava came from this InfoQ presentation: [Practical Benchmarking: How to Detect Performance Changes in Noisy Results](https://www.infoq.com/presentations/noise-tips/) which introduced an OSS [analysis](https://github.com/apache/otava/blob/ef6f9bd22cf09555edf4372cd988634acbad7fab/hunter/analysis.py) tool called "Hunter". The project would later be renamed to Apache Otava and it turns out that there's also an implementation in the Lucene benchmarks in [`benchUtil.py#simpleReport()`](https://github.com/mikemccand/luceneutil/blob/a75b8a4d3a8c146f3ff7e6695ab6bbf2e34e4b90/src/python/benchUtil.py#L1387-L1468) of the ["Student's T-Test"](https://github.com/mikemccand/luceneutil/blob/a75b8a4d3a8c146f3ff7e6695ab6bbf2e34e4b90/src/python/benchUtil.py#L1467).
+[^2]: The [LLVM project](https://github.com/llvm/llvm-project) is primarily built using CMake, but in 2021, a [proposal](https://github.com/llvm/llvm-www/blob/main/proposals/LP0002-BazelBuildConfiguration.md) seeking to add an alternative way of building the LLVM monorepo was accepted. For years, Google had been maintaining [`llvm-bazel`](https://github.com/google/llvm-bazel) to allow them build the LLVM monorepo internally using Bazel (instead of the official build system based on CMake), so once the proposal was accepted, code from the `llvm-bazel` repo was merged into `llvm-project`.
 
