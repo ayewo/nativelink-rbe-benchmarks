@@ -230,3 +230,11 @@ pnpm-debug.log*
 
 # macOS-specific files
 .DS_Store
+
+# Terraform stuff
+.terraform*
+terraform.tfstate*
+.infracost/
+.update_scheduler_ips.zip
+tfplan.json
+tfplan.binary

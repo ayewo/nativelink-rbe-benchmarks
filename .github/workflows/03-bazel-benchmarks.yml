@@ -88,14 +88,15 @@ jobs:
           # Compare commit hashes
           if [ "$COMMIT_HASH" = "$LAST_COMMIT_HASH" ]; then
             echo "Commit hashes match - ending job as there are no new commits in the **source** repo"
-            echo "skip_next=true" >> $GITHUB_OUTPUT
+            echo "skip_remaining=true" >> $GITHUB_OUTPUT
             exit 0
           else
             echo "Commit hashes differ - continue job run building the **target** repo"
-            echo "skip_next=false" >> $GITHUB_OUTPUT
+            echo "skip_remaining=false" >> $GITHUB_OUTPUT
           fi
           
       - name: Setup Bazel
+        if: steps.check_commit.outputs.skip_remaining != 'true'
         uses: >- # v0.8.5
           bazel-contrib/setup-bazel@e403ad507104847c3539436f64a9e9eecc73eeec
         with:
@@ -105,6 +106,7 @@ jobs:
           bazelisk-version: 1.x
 
       - name: Install target repo build dependencies, hyperfine & jq
+        if: steps.check_commit.outputs.skip_remaining != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -116,11 +118,13 @@ jobs:
               libxml2-dev libffi-dev libssl-dev python3-setuptools libtool autoconf zip unzip
           
       - name: Update filesystem permissions
+        if: steps.check_commit.outputs.skip_remaining != 'true'
         run: |
           sudo chown -R $USER:$USER $GITHUB_WORKSPACE
           chmod -R 755 $GITHUB_WORKSPACE
 
       - name: Add Nativelink config to the target repo's .bazelrc
+        if: steps.check_commit.outputs.skip_remaining != 'true'
         working-directory: ${{ env.TARGET_DIR }}
         run: |
           cat > utils/bazel/user.bazelrc << 'EOF'
@@ -148,6 +152,7 @@ jobs:
 
       # --- Scenario 01: Build target repo with Remote Cache Only ---
       - name: Target repo build using Bazel Remote Caching - run
+        if: steps.check_commit.outputs.skip_remaining != 'true'
         working-directory: ${{ env.TARGET_DIR }}/utils/bazel
         run: |
           bazel clean --expunge
@@ -156,24 +161,29 @@ jobs:
             --config=generic_clang @llvm-project//llvm:llvm
 
       - name: Target repo build using Bazel Remote Caching - write to CSV
+        if: steps.check_commit.outputs.skip_remaining != 'true'
         run: |
           python csv.writer.py $GITHUB_WORKSPACE/01-bep-remote-cache.json \
           remote-caching.csv ${{ env.COMMIT_HASH }} ${{ toJSON(env.COMMIT_MESSAGE) }}
 
       # --- Scenario 02: Build with Remote Caching & Execution ---
       - name: Target repo build using Bazel Remote Execution - run
+        if: steps.check_commit.outputs.skip_remaining != 'true'
         working-directory: ${{ env.TARGET_DIR }}/utils/bazel
         run: |
           bazel clean --expunge
           bazel build --build_event_json_file=$GITHUB_WORKSPACE/02-bep-remote-cache-and-execution.json \
             --build_event_binary_file=$GITHUB_WORKSPACE/02-bep-remote-cache-and-execution.bin \
             --config=generic_clang --config=remote_execution @llvm-project//llvm:llvm
+
       - name: Target repo build using Bazel Remote Execution - write to CSV
+        if: steps.check_commit.outputs.skip_remaining != 'true'
         run: |
           python csv.writer.py $GITHUB_WORKSPACE/02-bep-remote-cache-and-execution.json \
           remote-execution.csv ${{ env.COMMIT_HASH }} ${{ toJSON(env.COMMIT_MESSAGE) }}
 
       - name: Add updated CSVs of the run results to git
+        if: steps.check_commit.outputs.skip_remaining != 'true'
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
@@ -185,7 +195,7 @@ jobs:
 
       - name: Check if BEP JSON files from the Bazel build exist
         id: check-bep
-        if: always()
+        if: always() && steps.check_commit.outputs.skip_remaining != 'true'
         run: |
           files=()
           for file in 01-bep-remote-cache.json 01-bep-remote-cache.bin 02-bep-remote-cache-and-execution.json 02-bep-remote-cache-and-execution.bin; do
@@ -204,7 +214,7 @@ jobs:
       - name: Upload Bazel BEP JSON output as build artifacts
         uses: >- # v4.6.2
           actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always() && steps.check-bep.outputs.found == 'true'
+        if: always() && steps.check-bep.outputs.found == 'true' && steps.check_commit.outputs.skip_remaining != 'true'
         with:
           name: build_event_output
           path: |
